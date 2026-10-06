@@ -106,3 +106,15 @@ html.dark textarea {
     display: block !important;
   }
 }
+
+
+/* Database theme bridge + portfolio palette with mild red page backgrounds. */
+:root { --rtc-background:#fff8f5; --rtc-surface:#fffaf7; --rtc-text:#241716; --rtc-primary:#d92d27; --rtc-accent:#e7ad21; }
+html.light body { background-color: var(--rtc-background) !important; color: var(--rtc-text) !important; }
+html.light [class*="bg-[#faf7f2]"] { background-color: var(--rtc-background) !important; }
+/* Palette bridge for existing utility-class components. */
+html.light [class~="bg-red-600"], html.light [class~="bg-red-500"] { background-color: var(--rtc-primary) !important; }
+html.light [class~="bg-amber-500"], html.light [class~="bg-amber-600"] { background-color: var(--rtc-accent) !important; }
+html.light [class~="border-amber-600"], html.light [class~="border-red-600"] { border-color: var(--rtc-primary) !important; }
+html.light [class~="text-red-600"], html.light [class~="text-red-500"] { color: var(--rtc-primary) !important; }
+html.light [class~="text-amber-400"], html.light [class~="text-amber-500"] { color: var(--rtc-accent) !important; }

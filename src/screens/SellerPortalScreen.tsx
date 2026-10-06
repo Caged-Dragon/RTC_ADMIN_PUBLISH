@@ -43,6 +43,7 @@ import {
 } from 'lucide-react';
 import { Product, CATEGORIES, STORE_INFO } from '../data/products';
 import { useProducts } from '../context/ProductsContext';
+import { useCategories } from '../context/CategoriesContext';
 import { useCart, PlacedOrder } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { PackingSlipModal } from '../components/PackingSlipModal';
@@ -690,8 +691,8 @@ export const SellerPortalScreen: React.FC<SellerPortalScreenProps> = ({
               className="py-2.5 px-3 rounded-xl bg-stone-900 border border-stone-800 text-xs text-stone-200 cursor-pointer sm:w-60"
             >
               <option value="All">All 18 Categories ({products.length})</option>
-              {CATEGORIES.filter((c) => c !== 'All Items').map((c) => (
-                <option key={c} value={c}>{c}</option>
+              {categories.filter((c) => c.is_active).map((c) => (
+                <option key={c.category_id} value={c.category_name}>{c.category_name}</option>
               ))}
             </select>
 
@@ -1658,8 +1659,8 @@ export const SellerPortalScreen: React.FC<SellerPortalScreenProps> = ({
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="w-full px-3 py-2 rounded-lg bg-stone-950 border border-stone-700 text-white cursor-pointer"
                   >
-                    {CATEGORIES.filter((c) => c !== 'All Items').map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                    {categories.filter((c) => c.is_active).map((c) => (
+                      <option key={c.category_id} value={c.category_name}>{c.category_name}</option>
                     ))}
                   </select>
                 </div>

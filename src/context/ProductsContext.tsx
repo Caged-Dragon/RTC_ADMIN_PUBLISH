@@ -3,7 +3,7 @@ import { Product } from '../data/products';
 import { dbDelete, dbInsert, dbSelect, dbUpdate, storageUploadOriginal } from '../lib/supabase';
 import { useAdminAuthOptional } from './AdminAuthContext';
 
-export type DbProduct = Product & { dbId: string; skuCode?: string; factoryRate?: number; mrpRate?: number; availableQuantity?: number; isBestseller?: boolean; isFeatured?: boolean; isGreenCracker?: boolean };
+export type DbProduct = Product & { dbId: string; categoryId?: string; skuCode?: string; factoryRate?: number; mrpRate?: number; availableQuantity?: number; isBestseller?: boolean; isFeatured?: boolean; isGreenCracker?: boolean };
 interface ProductsContextType {
   products: DbProduct[];
   isLoading: boolean;
@@ -18,7 +18,7 @@ const ProductsContext = createContext<ProductsContextType | undefined>(undefined
 
 function mapProduct(row: any): DbProduct {
   return {
-    id: Number(row.product_code), dbId: row.id, sNo: Number(row.s_no ?? row.product_code), name: row.name,
+    id: Number(row.product_code), dbId: row.id, categoryId: row.category_id || undefined, sNo: Number(row.s_no ?? row.product_code), name: row.name,
     category: row.category, unit: row.pack_type, rate: Number(row.factory_rate ?? row.rate ?? 0),
     description: row.description || '', pieces: row.pieces_per_pack ? String(row.pieces_per_pack) : undefined,
     imageUrl: row.image_url || row.product_image || undefined, stockStatus: row.stock_status,
@@ -53,7 +53,7 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (!sNo) throw new Error('S.No is required.');
     await dbInsert('products', {
       product_code: sNo, s_no: sNo, sku_code: `RT-${String(sNo).padStart(3,'0')}`,
-      name: p.name, category: p.category, pack_type: p.unit || 'Box', rate: Number(p.rate || 0),
+      name: p.name, category: p.category, category_id: p.categoryId || null, pack_type: p.unit || 'Box', rate: Number(p.rate || 0),
       factory_rate: Number(p.factoryRate ?? p.rate ?? 0), mrp_rate: Number(p.mrpRate ?? p.rate ?? 0),
       description: p.description || null, pieces_per_pack: p.pieces ? parseInt(String(p.pieces), 10) || null : null,
       stock_status: p.stockStatus || 'IN_STOCK', available_quantity: Number(p.availableQuantity || 0),
@@ -69,7 +69,7 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (!existing) throw new Error('Product not found.');
     const p = { ...existing, ...(patch || {}) };
     await dbUpdate('products', `id=eq.${existing.dbId}`, {
-      product_code: Number(p.sNo), s_no: Number(p.sNo), name: p.name, category: p.category, pack_type: p.unit,
+      product_code: Number(p.sNo), s_no: Number(p.sNo), name: p.name, category: p.category, category_id: p.categoryId || null, pack_type: p.unit,
       rate: Number(p.rate), factory_rate: Number(p.factoryRate ?? p.rate), mrp_rate: Number(p.mrpRate ?? p.rate),
       description: p.description || null, pieces_per_pack: p.pieces ? parseInt(String(p.pieces), 10) || null : null,
       stock_status: p.stockStatus || 'IN_STOCK', available_quantity: Number(p.availableQuantity || 0),

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { loadThemePage, applyThemeVars, applyComponentStyles } from '../themeDatabase';
 
 type Theme = 'light' | 'dark';
 
@@ -42,6 +43,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       console.error(e);
     }
   }, [theme]);
+
+  useEffect(() => {
+    const load = async (page: string) => { const target = page || 'operations'; const t = await loadThemePage('admin', target); applyThemeVars(t); try { const rows = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/theme_component_settings?select=*&website_key=eq.admin&page_key=eq.${encodeURIComponent(target)}&is_active=eq.true&order=sort_order`, { headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || '' } }).then(r=>r.json()); applyComponentStyles(Array.isArray(rows)?rows:[]); } catch {} };
+    load(document.documentElement.dataset.rtcPage || 'operations');
+    const handler = (e: Event) => load((e as CustomEvent<string>).detail || 'operations');
+    window.addEventListener('rt-theme-page', handler);
+    return () => window.removeEventListener('rt-theme-page', handler);
+  }, []);
 
   const toggleTheme = () => {
     setThemeState((prev) => (prev === 'dark' ? 'light' : 'dark'));

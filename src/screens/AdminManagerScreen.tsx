@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Product, CATEGORIES } from '../data/products';
 import { useProducts } from '../context/ProductsContext';
+import { useCategories } from '../context/CategoriesContext';
 import { ScreenId } from '../components/Navbar';
 
 interface AdminManagerScreenProps {
@@ -31,6 +32,7 @@ export const AdminManagerScreen: React.FC<AdminManagerScreenProps> = ({
   onNavigateToCustomerSite,
 }) => {
   const { products, insertProduct, updateProduct, deleteProduct, resetCatalog, isLoading } = useProducts();
+  const { categories } = useCategories();
 
   // Search & Filter state
   const [search, setSearch] = useState('');
@@ -305,7 +307,7 @@ export const AdminManagerScreen: React.FC<AdminManagerScreenProps> = ({
             className="py-2 px-3 rounded-xl bg-stone-900 dark:bg-stone-900 light:bg-white border border-stone-800 dark:border-stone-800 light:border-stone-300 text-xs text-stone-200 dark:text-stone-200 light:text-stone-800 cursor-pointer"
           >
             <option value="All">All Categories ({products.length})</option>
-            {CATEGORIES.filter((c) => c !== 'All Items').map((c) => (
+            {categories.filter((c) => c.is_active).map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>
@@ -443,8 +445,8 @@ export const AdminManagerScreen: React.FC<AdminManagerScreenProps> = ({
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="w-full px-3 py-2 rounded-lg bg-stone-950 dark:bg-stone-950 light:bg-stone-50 border border-stone-700 text-white dark:text-white light:text-stone-900 cursor-pointer"
                   >
-                    {CATEGORIES.filter((c) => c !== 'All Items').map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                    {categories.filter((c) => c.is_active).map((c) => (
+                      <option key={c.category_id} value={c.category_name}>{c.category_name}</option>
                     ))}
                   </select>
                 </div>
