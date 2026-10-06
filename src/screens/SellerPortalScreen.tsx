@@ -41,7 +41,8 @@ import {
   Download,
   AlertCircle
 } from 'lucide-react';
-import { Product, CATEGORIES, STORE_INFO } from '../data/products';
+import type { Product } from '../data/products';
+import { STORE_INFO } from '../data/products';
 import { useProducts } from '../context/ProductsContext';
 import { useCategories } from '../context/CategoriesContext';
 import { useCart, PlacedOrder } from '../context/CartContext';
@@ -93,8 +94,9 @@ const DESTINATION_RATES = [
 export const SellerPortalScreen: React.FC<SellerPortalScreenProps> = ({
   onSwitchToCustomer,
 }) => {
-  const { products, insertProduct, updateProduct, deleteProduct, uploadProductImage, resetCatalog } = useProducts();
+  const { products, insertProduct, updateProduct, deleteProduct, uploadProductImage, refreshProducts } = useProducts();
   const { ordersHistory, updateOrderStatus, addPlacedOrder } = useCart();
+  const { categories } = useCategories();
   const toast = useToast();
 
   // Active Seller Portal Tab
@@ -642,14 +644,14 @@ export const SellerPortalScreen: React.FC<SellerPortalScreenProps> = ({
               <button
                 onClick={() => {
                   if (window.confirm('Reset catalog back to the official 127 products from 2026 PDF list?')) {
-                    resetCatalog();
-                    showNotice('Catalog restored to original 127 items.');
+                    refreshProducts();
+                    showNotice('Product catalog refreshed from Supabase.');
                   }
                 }}
                 className="px-3.5 py-2.5 rounded-xl bg-stone-800 dark:bg-stone-800 light:bg-stone-100 hover:bg-stone-700 text-stone-300 dark:text-stone-300 light:text-stone-700 border border-stone-700 font-semibold text-xs flex items-center gap-1.5 cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset to 127 PDF Items</span>
+                <span>Refresh Database</span>
               </button>
             </div>
 

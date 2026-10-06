@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { Product } from '../data/products';
+import type { Product } from '../data/products';
 import { dbDelete, dbInsert, dbSelect, dbUpdate, storageUploadOriginal } from '../lib/supabase';
 import { useAdminAuthOptional } from './AdminAuthContext';
 
@@ -11,7 +11,6 @@ interface ProductsContextType {
   updateProduct: (product: number | DbProduct, patch?: Partial<DbProduct>) => Promise<void>;
   uploadProductImage: (file: File, productId?: number | string) => Promise<string>;
   deleteProduct: (product: number | DbProduct) => Promise<void>;
-  resetCatalog: () => Promise<void>;
   refreshProducts: () => Promise<void>;
 }
 const ProductsContext = createContext<ProductsContextType | undefined>(undefined);
@@ -95,8 +94,7 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return storageUploadOriginal(file, 'rtcrackers-images', key, adminToken);
   };
 
-  const resetCatalog = async () => { throw new Error('Catalog reset is intentionally disabled. Use individual product changes to protect the live database.'); };
 
-  return <ProductsContext.Provider value={{ products, isLoading, refreshProducts, insertProduct, updateProduct, deleteProduct, uploadProductImage, resetCatalog }}>{children}</ProductsContext.Provider>;
+  return <ProductsContext.Provider value={{ products, isLoading, refreshProducts, insertProduct, updateProduct, deleteProduct, uploadProductImage }}>{children}</ProductsContext.Provider>;
 };
 export const useProducts = () => { const c = useContext(ProductsContext); if (!c) throw new Error('useProducts must be used within ProductsProvider'); return c; };

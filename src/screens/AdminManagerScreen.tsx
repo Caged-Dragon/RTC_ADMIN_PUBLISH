@@ -19,7 +19,7 @@ import {
   Sparkles,
   ShieldCheck
 } from 'lucide-react';
-import { Product, CATEGORIES } from '../data/products';
+import type { Product } from '../data/products';
 import { useProducts } from '../context/ProductsContext';
 import { useCategories } from '../context/CategoriesContext';
 import { ScreenId } from '../components/Navbar';
@@ -31,7 +31,7 @@ interface AdminManagerScreenProps {
 export const AdminManagerScreen: React.FC<AdminManagerScreenProps> = ({
   onNavigateToCustomerSite,
 }) => {
-  const { products, insertProduct, updateProduct, deleteProduct, resetCatalog, isLoading } = useProducts();
+  const { products, insertProduct, updateProduct, deleteProduct, refreshProducts, isLoading } = useProducts();
   const { categories } = useCategories();
 
   // Search & Filter state
@@ -182,11 +182,9 @@ export const AdminManagerScreen: React.FC<AdminManagerScreenProps> = ({
     setBulkPercent('');
   };
 
-  const handleResetCatalog = async () => {
-    if (window.confirm('Reset catalog back to the original 127 products from the 2026 PDF catalog?')) {
-      await resetCatalog();
-      showNotice('Catalog restored to original 127 items from 2026 PDF list.');
-    }
+  const handleRefreshCatalog = async () => {
+    await refreshProducts();
+    showNotice('Product catalog refreshed from Supabase.');
   };
 
   return (
@@ -279,12 +277,12 @@ export const AdminManagerScreen: React.FC<AdminManagerScreenProps> = ({
 
           {/* Reset Catalog Button */}
           <button
-            onClick={handleResetCatalog}
+            onClick={handleRefreshCatalog}
             className="px-3.5 py-2.5 rounded-xl bg-stone-800 dark:bg-stone-800 light:bg-stone-100 hover:bg-stone-700 text-stone-300 dark:text-stone-300 light:text-stone-700 border border-stone-700 dark:border-stone-700 light:border-stone-300 font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
-            title="Reset catalog back to initial 127 items"
+            title="Refresh the product catalog from Supabase"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>Restore 127 PDF Items</span>
+            <span>Refresh Database</span>
           </button>
         </div>
 
@@ -308,8 +306,8 @@ export const AdminManagerScreen: React.FC<AdminManagerScreenProps> = ({
           >
             <option value="All">All Categories ({products.length})</option>
             {categories.filter((c) => c.is_active).map((c) => (
-              <option key={c} value={c}>
-                {c}
+              <option key={c.category_id} value={c.category_name}>
+                {c.category_name}
               </option>
             ))}
           </select>

@@ -122,10 +122,10 @@ export function authProviderUrl(provider: 'google' | 'apple' | 'azure', redirect
 export function clearSession() { saveSession(null); }
 
 export function getStoredSupabaseConfig() { return { url: SUPABASE_URL, anonKey: SUPABASE_KEY }; }
-export function saveSupabaseConfig() { /* configuration is build-time via Vite env */ }
+export function saveSupabaseConfig(_url?: string, _anonKey?: string) { /* configuration is build-time via Vite env */ }
 export function clearSupabaseConfig() { /* configuration is build-time via Vite env */ }
-export function getSupabaseClient() { return null; }
-export async function testSupabaseConnection() {
+export function getSupabaseClient(): any { return null; }
+export async function testSupabaseConnection(url?: string, anonKey?: string) {
   try { await dbSelect('products', 'select=id&limit=1'); return { success: true, message: 'Connected to Supabase.' }; }
   catch (e: any) { return { success: false, message: e.message || 'Connection failed.' }; }
 }
