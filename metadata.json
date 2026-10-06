@@ -1,0 +1,6 @@
+{
+  "name": "RedThunder Crackers - 2026 Price List & Cart",
+  "description": "Official 2026 online catalog, quick order price list, and shopping cart for RedThunder Crackers, Sivakasi. Direct WhatsApp ordering and estimate generator.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

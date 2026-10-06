@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant light (&:where(.light, .light *));
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+
+  html.light {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  
+  h1, h2, h3, h4, .font-display {
+    font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+  }
+
+  /* Responsive image discipline */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* Light Theme Color Transformation Engine */
+html.light body {
+  background-color: #faf7f2 !important;
+  color: #1c1917 !important;
+}
+
+html.dark body {
+  background-color: #0c0a09 !important;
+  color: #f5f5f4 !important;
+}
+
+/* Light mode card surfaces and borders fallback */
+html.light div[class*="bg-stone-900"]:not([class*="from-"]):not([class*="to-"]):not([class*="bg-amber"]):not([class*="bg-emerald"]):not([class*="bg-red"]):not([class*="bg-purple"]),
+html.light section[class*="bg-stone-900"],
+html.light aside[class*="bg-stone-900"] {
+  background-color: #ffffff;
+  color: #1c1917;
+}
+
+html.light div[class*="bg-stone-950"]:not([class*="from-"]):not([class*="to-"]):not([class*="bg-amber"]):not([class*="bg-emerald"]):not([class*="bg-red"]):not([class*="bg-purple"]) {
+  background-color: #fbf9f5;
+  color: #1c1917;
+}
+
+/* Light mode borders */
+html.light [class*="border-stone-800"],
+html.light [class*="border-stone-700"] {
+  border-color: #e7e5e4 !important;
+}
+
+/* Light mode primary and secondary typography */
+html.light h1.text-white,
+html.light h2.text-white,
+html.light h3.text-white,
+html.light span.text-white:not([class*="bg-"]),
+html.light strong.text-white,
+html.light p.text-white {
+  color: #1c1917 !important;
+}
+
+html.light .text-stone-400,
+html.light .text-stone-300 {
+  color: #57534e !important;
+}
+
+/* Light mode form inputs */
+html.light input:not([type="checkbox"]):not([type="radio"]),
+html.light select,
+html.light textarea {
+  background-color: #ffffff !important;
+  color: #1c1917 !important;
+  border-color: #d6d3d1 !important;
+}
+
+html.dark input:not([type="checkbox"]):not([type="radio"]),
+html.dark select,
+html.dark textarea {
+  background-color: #1c1917;
+  color: #fafaf9;
+  border-color: #44403c;
+}
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+}

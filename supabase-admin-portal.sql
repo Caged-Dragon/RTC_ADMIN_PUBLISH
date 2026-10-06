@@ -1,0 +1,103 @@
+-- Admin portal security additions for project ypmiinmkyvzdpakbkers
+-- Authorized IDs:
+-- developer@rtcrackers.com = primary_admin
+-- admin@rtcrackers.com = admin
+-- Passwords remain managed by Supabase Auth.
+
+create schema if not exists private;
+
+create table if not exists private.admin_accounts (
+  id uuid primary key default gen_random_uuid(),
+  email text not null unique,
+  display_name text not null,
+  admin_role text not null check (admin_role in ('primary_admin','admin')),
+  is_active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+insert into private.admin_accounts(email,display_name,admin_role)
+values
+('developer@rtcrackers.com','Primary Admin','primary_admin'),
+('admin@rtcrackers.com','Admin','admin')
+on conflict (email) do update set display_name=excluded.display_name, admin_role=excluded.admin_role, is_active=true;
+
+alter table private.admin_accounts enable row level security;
+revoke all on private.admin_accounts from anon, authenticated;
+create policy "deny_client_admin_accounts" on private.admin_accounts for all to authenticated using (false) with check (false);
+
+create table if not exists public.admin_access (
+  email text primary key,
+  display_name text not null,
+  admin_role text not null check (admin_role in ('primary_admin','admin')),
+  is_active boolean not null default true
+);
+
+insert into public.admin_access(email,display_name,admin_role)
+values
+('developer@rtcrackers.com','Primary Admin','primary_admin'),
+('admin@rtcrackers.com','Admin','admin')
+on conflict (email) do update set display_name=excluded.display_name, admin_role=excluded.admin_role, is_active=true;
+
+alter table public.admin_access enable row level security;
+revoke all on public.admin_access from anon, authenticated;
+grant select on public.admin_access to authenticated;
+create policy "admins_can_verify_own_access" on public.admin_access
+for select to authenticated
+using (is_active=true and lower(email)=lower(coalesce(auth.jwt()->>'email','')));
+
+create or replace function private.is_admin()
+returns boolean language sql stable security definer set search_path = private, public as $$
+  select exists(select 1 from private.admin_accounts a where a.is_active=true and lower(a.email)=lower(coalesce(auth.jwt()->>'email','')));
+$$;
+grant usage on schema private to authenticated;
+grant execute on function private.is_admin() to authenticated;
+
+-- Grant admin RLS policies for the live data tables.
+-- The actual migration used in production also includes the matching policies for
+-- products, company_profile, merchant_settings, orders, order_items, order_tracking,
+-- users, transporters, freight_rates, reviews, offers and offer child tables.
+
+-- ============================================================
+-- ORIGINAL IMAGE STORAGE
+-- Images are stored as original binary files in Supabase Storage.
+-- The database stores only their public URL in image_url/logo_url.
+-- No client-side resize, recompression, or format conversion is used.
+-- ============================================================
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'rtcrackers-images',
+  'rtcrackers-images',
+  true,
+  52428800,
+  array['image/jpeg','image/png','image/webp','image/gif','image/avif','image/svg+xml','image/bmp','image/tiff']
+)
+on conflict (id) do update
+set public = true,
+    file_size_limit = 52428800,
+    allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "Public read RT Crackers images" on storage.objects;
+create policy "Public read RT Crackers images"
+on storage.objects for select
+to public
+using (bucket_id = 'rtcrackers-images');
+
+drop policy if exists "Admins upload RT Crackers images" on storage.objects;
+create policy "Admins upload RT Crackers images"
+on storage.objects for insert
+to authenticated
+with check (bucket_id = 'rtcrackers-images' and private.is_admin());
+
+drop policy if exists "Admins update RT Crackers images" on storage.objects;
+create policy "Admins update RT Crackers images"
+on storage.objects for update
+to authenticated
+using (bucket_id = 'rtcrackers-images' and private.is_admin())
+with check (bucket_id = 'rtcrackers-images' and private.is_admin());
+
+drop policy if exists "Admins delete RT Crackers images" on storage.objects;
+create policy "Admins delete RT Crackers images"
+on storage.objects for delete
+to authenticated
+using (bucket_id = 'rtcrackers-images' and private.is_admin());
