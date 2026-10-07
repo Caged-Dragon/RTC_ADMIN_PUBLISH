@@ -3,7 +3,7 @@ import { LogOut, Building2, Store, ShieldCheck, ExternalLink, Sun, Moon, Image a
 import { ThemeProvider } from './context/ThemeContext';
 import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
 import { AuthProvider } from './context/AuthContext';
-import { StoreProvider } from './context/StoreContext';
+import { StoreProvider, useStore } from './context/StoreContext';
 import { ProductsProvider } from './context/ProductsContext';
 import { ToastProvider } from './context/ToastContext';
 import { CartProvider } from './context/CartContext';
@@ -20,6 +20,7 @@ import { CategoriesProvider } from './context/CategoriesContext';
 const AdminWorkspace: React.FC = () => {
   const { admin, loading, logout } = useAdminAuth();
   const { theme, toggleTheme } = useTheme();
+  const { storeInfo: STORE_INFO } = useStore();
   const [screen,setScreen]=useState<'operations'|'categories'|'banners'|'company'|'theme'>('operations');
   const [invoiceOpen,setInvoiceOpen]=useState(false);
   React.useEffect(() => { if (admin) window.dispatchEvent(new CustomEvent('rt-theme-page', { detail: screen })); }, [screen, admin]);
@@ -28,7 +29,7 @@ const AdminWorkspace: React.FC = () => {
   return <div className="min-h-screen bg-[#faf7f2] dark:bg-stone-950 text-stone-900 dark:text-stone-100">
     <header data-rtc-component="header" className="sticky top-0 z-50 bg-stone-950/95 backdrop-blur border-b border-amber-600/30 text-white">
       <div className="max-w-[1500px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 via-red-600 to-rose-600 flex items-center justify-center"><ShieldCheck className="w-5 h-5"/></div><div><div className="font-display text-lg font-black">RED<span className="text-red-500">THUNDER</span></div><div className="text-[10px] uppercase tracking-widest text-amber-400 font-bold">Admin Control Center</div></div></div>
+        <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl overflow-hidden bg-white flex items-center justify-center border border-amber-500/30 shadow"><img src={STORE_INFO.logoUrl || ""} alt={STORE_INFO.name || "Company logo"} className={STORE_INFO.logoUrl ? "w-full h-full object-contain" : "hidden"} />{!STORE_INFO.logoUrl && <ShieldCheck className="w-5 h-5 text-stone-900" />}</div><div><div className="font-display text-lg font-black">{STORE_INFO.name || "RT Crackers"}</div><div className="text-[10px] uppercase tracking-widest text-amber-400 font-bold">Admin Control Center</div></div></div>
         <div className="hidden sm:flex items-center gap-2 text-xs"><span className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">{admin.role==='primary_admin'?'Primary Admin':'Admin'}</span><span className="text-stone-400">{admin.email}</span></div>
         <div className="flex items-center gap-2 flex-wrap justify-end"><button onClick={()=>setScreen('operations')} className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer ${screen==='operations'?'bg-amber-600 text-white':'text-stone-300 hover:bg-stone-900'}`}><Store className="w-4 h-4"/>Operations</button><button onClick={()=>setScreen('categories')} className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer ${screen==='categories'?'bg-amber-600 text-white':'text-stone-300 hover:bg-stone-900'}`}><Layers className="w-4 h-4"/>Categories</button><button onClick={()=>setScreen('banners')} className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer ${screen==='banners'?'bg-amber-600 text-white':'text-stone-300 hover:bg-stone-900'}`}><ImageIcon className="w-4 h-4"/>Banners</button><button onClick={()=>setScreen('company')} className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer ${screen==='company'?'bg-amber-600 text-white':'text-stone-300 hover:bg-stone-900'}`}><Building2 className="w-4 h-4"/>Company</button><button onClick={()=>setScreen('theme')} className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer ${screen==='theme'?'bg-amber-600 text-white':'text-stone-300 hover:bg-stone-900'}`}>Theme</button><button onClick={toggleTheme} aria-label="Toggle light/dark mode" title={theme==='dark'?'Switch to light mode':'Switch to dark mode'} className="p-2 rounded-lg text-stone-300 hover:bg-stone-900 cursor-pointer">{theme==='dark'?<Sun className="w-4 h-4"/>:<Moon className="w-4 h-4"/>}</button><a href="https://cart.rtcrackers.com" target="_blank" rel="noreferrer" className="hidden md:flex px-3 py-2 rounded-lg text-xs font-bold text-stone-300 hover:bg-stone-900 items-center gap-1.5"><ExternalLink className="w-4 h-4"/>Store</a><button onClick={logout} className="px-3 py-2 rounded-lg text-xs font-bold text-red-300 hover:bg-red-950/50 flex items-center gap-1.5 cursor-pointer"><LogOut className="w-4 h-4"/>Logout</button></div>
       </div>
