@@ -1,20 +1,19 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# RedThunder Crackers — Admin Portal
 
-# Run and deploy your AI Studio app
+Vite + React admin site for `admin.rtcrackers.com`, backed by the shared Supabase project
+(`ypmiinmkyvzdpakbkers`). The customer site is a separate project; see `DEPLOYMENT.md`.
 
-This contains everything you need to run your app locally.
+## Run locally
+1. `npm install`
+2. Copy `.env.example` to `.env.local` and set `VITE_SUPABASE_PUBLISHABLE_KEY` (publishable key only — never a service-role key).
+3. `npm run dev`
 
-View your app in AI Studio: https://ai.studio/apps/c6019d5b-704c-47c2-89b4-391f9a432f23
+## Build
+`npm run build` (output in `dist`). `npm run lint` runs the TypeScript check.
 
-## Run Locally
+## Database
+This project shares one Supabase database with other websites, so database changes here are **additive only**.
+See `supabase/rtc_admin_additive_fixes.sql` for the latest changes and their rollback statements.
 
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Access
+Sign-in uses Supabase Auth; `public.admin_access` (matched on the user's id) decides who is an administrator.

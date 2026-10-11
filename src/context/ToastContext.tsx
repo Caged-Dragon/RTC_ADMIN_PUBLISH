@@ -28,6 +28,7 @@ interface ToastContextType {
   showToast: (options: ToastOptions) => string;
   dismissToast: (id: string) => void;
   success: (message: string, title?: string, action?: ToastAction) => string;
+  error: (message: string, title?: string) => string;
   orderSubmitted: (orderId: string, amount: number, action?: ToastAction) => string;
   addedToCart: (productName: string, quantity: number, unit: string, rate: number, image?: string, onViewCart?: () => void) => string;
 }
@@ -72,6 +73,11 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     [showToast]
   );
 
+  const error = useCallback(
+    (message: string, title?: string) => showToast({ type: 'error', message, title, duration: 7000 }),
+    [showToast]
+  );
+
   const orderSubmitted = useCallback(
     (orderId: string, amount: number, action?: ToastAction) => {
       return showToast({
@@ -106,6 +112,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         showToast,
         dismissToast,
         success,
+        error,
         orderSubmitted,
         addedToCart,
       }}

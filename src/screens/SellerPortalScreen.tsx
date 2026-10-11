@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { dbSelect } from '../lib/supabase';
 import {
   Package,
   Plus,
@@ -98,6 +99,12 @@ export const SellerPortalScreen: React.FC<SellerPortalScreenProps> = ({
   const { ordersHistory, updateOrderStatus, addPlacedOrder } = useCart();
   const { categories } = useCategories();
   const toast = useToast();
+  const [merchantUpi, setMerchantUpi] = useState<string>('');
+  useEffect(() => {
+    dbSelect<any>('merchant_settings', 'select=merchant_upi_id&limit=1')
+      .then((rows) => setMerchantUpi(rows[0]?.merchant_upi_id || ''))
+      .catch(() => setMerchantUpi(''));
+  }, []);
 
   // Active Seller Portal Tab
   const [sellerTab, setSellerTab] = useState<'inventory' | 'orders' | 'customers' | 'dispatch' | 'walkin' | 'analytics' | 'settings'>('inventory');
@@ -150,10 +157,7 @@ export const SellerPortalScreen: React.FC<SellerPortalScreenProps> = ({
     city: 'Madurai',
     transport: 'Local Godown Direct Handover',
   });
-  const [walkinCart, setWalkinCart] = useState<Array<{ product: Product; quantity: number }>>([
-    { product: products[0] || { id: 1, sNo: 1, name: '10 cm Electric Sparklers', category: 'Colourful Sparklers', unit: 'Box', rate: 24, description: 'Bright sparklers' }, quantity: 5 },
-    { product: products.find((p) => p.sNo === 118) || { id: 118, sNo: 118, name: 'Red Rose ( 15 Items )', category: 'Gift Boxes', unit: 'Box', rate: 400, description: 'Gift box' }, quantity: 2 },
-  ]);
+  const [walkinCart, setWalkinCart] = useState<Array<{ product: Product; quantity: number }>>([]);
   const [walkinSearch, setWalkinSearch] = useState('');
 
   const showNotice = (msg: string) => {
@@ -378,8 +382,13 @@ export const SellerPortalScreen: React.FC<SellerPortalScreenProps> = ({
   };
 
   // Update Order Status as Seller
-  const handleUpdateOrderStatus = (orderId: string, newStatus: PlacedOrder['status'], lr?: string, transporter?: string) => {
-    updateOrderStatus(orderId, newStatus, lr, transporter);
+  const handleUpdateOrderStatus = async (orderId: string, newStatus: PlacedOrder['status'], lr?: string, transporter?: string) => {
+    try {
+      await updateOrderStatus(orderId, newStatus, lr, transporter);
+    } catch (e: any) {
+      toast.error(e?.message || 'Could not update the order status.', 'Seller Back-Office');
+      return;
+    }
     showNotice(`Order #${orderId} marked as "${newStatus}"!`);
     if (selectedOrderForDetails && selectedOrderForDetails.orderId === orderId) {
       setSelectedOrderForDetails({
@@ -423,14 +432,19 @@ export const SellerPortalScreen: React.FC<SellerPortalScreenProps> = ({
   const walkinSubtotal = walkinCart.reduce((sum, item) => sum + item.product.rate * item.quantity, 0);
   const walkinTotalBoxes = walkinCart.reduce((sum, item) => sum + item.quantity, 0);
 
-  const handleSaveWalkinOrder = () => {
+  const [savingWalkin, setSavingWalkin] = useState(false);
+  const handleSaveWalkinOrder = async () => {
+    if (savingWalkin) return;
     if (walkinCart.length === 0) {
-      alert('Please add at least 1 cracker product.');
+      toast.error('Please add at least 1 cracker product.', 'Seller Back-Office');
       return;
     }
-    const orderId = `RT-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-    const newOrder: PlacedOrder = {
-      orderId,
+    if (!walkinCustomer.name.trim() || !walkinCustomer.phone.trim()) {
+      toast.error('Please enter the customer name and phone.', 'Seller Back-Office');
+      return;
+    }
+    const draft: PlacedOrder = {
+      orderId: '',
       date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
       customer: {
         name: walkinCustomer.name,
@@ -448,9 +462,17 @@ export const SellerPortalScreen: React.FC<SellerPortalScreenProps> = ({
       subtotal: walkinSubtotal,
       status: 'Payment Checked',
     };
-    addPlacedOrder(newOrder);
-    showNotice(`Created new walk-in order #${orderId} for ${walkinCustomer.name}!`);
-    setSelectedOrderForInvoice(newOrder);
+    setSavingWalkin(true);
+    try {
+      const saved = await addPlacedOrder(draft);
+      showNotice(`Created new walk-in order #${saved.orderId} for ${walkinCustomer.name}!`);
+      setSelectedOrderForInvoice(saved);
+      setWalkinCart([]);
+    } catch (e: any) {
+      toast.error(e?.message || 'The walk-in order could not be saved.', 'Seller Back-Office');
+    } finally {
+      setSavingWalkin(false);
+    }
   };
 
   return (
@@ -643,7 +665,7 @@ export const SellerPortalScreen: React.FC<SellerPortalScreenProps> = ({
 
               <button
                 onClick={() => {
-                  if (window.confirm('Reset catalog back to the official 127 products from 2026 PDF list?')) {
+                  if (window.confirm('Reload the product catalog from the database? Unsaved edits on this screen will be lost.')) {
                     refreshProducts();
                     showNotice('Product catalog refreshed from Supabase.');
                   }
@@ -1452,7 +1474,7 @@ export const SellerPortalScreen: React.FC<SellerPortalScreenProps> = ({
                 </div>
                 <div className="text-xs">
                   <span className="text-stone-400 block text-[11px]">Factory UPI ID:</span>
-                  <span className="font-mono font-bold text-amber-400">8124100501@paytm</span>
+                  <span className="font-mono font-bold text-amber-400">{merchantUpi || 'Not set in merchant settings'}</span>
                 </div>
                 <p className="text-[11px] text-stone-500">
                   Customers scan this QR code or use the mobile number to transfer order payments.

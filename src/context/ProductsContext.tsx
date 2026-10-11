@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import type { Product } from '../data/products';
-import { dbDelete, dbInsert, dbSelect, dbUpdate, storageUploadOriginal } from '../lib/supabase';
+import { dbDelete, dbInsert, dbSelectAll, dbUpdate, storageUploadOriginal } from '../lib/supabase';
 import { useAdminAuthOptional } from './AdminAuthContext';
 
 export type DbProduct = Product & { dbId: string; categoryId?: string; skuCode?: string; factoryRate?: number; mrpRate?: number; availableQuantity?: number; isBestseller?: boolean; isFeatured?: boolean; isGreenCracker?: boolean };
@@ -38,9 +38,9 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setIsLoading(true);
     try {
       const query = isAdmin ? 'select=*&order=s_no.asc' : 'select=*&is_active=eq.true&order=s_no.asc';
-      const rows = await dbSelect<any>('products', query, adminToken);
+      const rows = await dbSelectAll<any>('products', query, adminToken);
       setProducts(rows.map(mapProduct));
-    } catch (e) { console.error('Failed to load products from Supabase', e); setProducts([]); }
+    } catch (e) { console.error('Failed to load products from Supabase', e); /* keep the last good list instead of showing an empty catalog */ }
     finally { setIsLoading(false); }
   }, [isAdmin, adminToken]);
 

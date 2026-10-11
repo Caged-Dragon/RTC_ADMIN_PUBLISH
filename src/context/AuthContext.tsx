@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { authGetUser, authPasswordSignIn, authProviderUrl, authRefresh, authResetPassword, authSignUp, clearSession, dbSelect, dbUpdate, getSession, SupabaseAuthUser, SupabaseSession } from '../lib/supabase';
+import { authGetUser, authPasswordSignIn, authProviderUrl, authRefresh, authResetPassword, authSignUp, clearSession, dbSelect, dbUpdate, getSession, onSessionChange, SupabaseAuthUser, SupabaseSession } from '../lib/supabase';
 
 export interface UserProfile { id?: string; authUserId?: string; name: string; phone: string; email: string; city?: string; address?: string; district?: string; state?: string; pincode?: string; }
 interface AuthContextType { user: UserProfile | null; authUser: SupabaseAuthUser | null; session: SupabaseSession | null; isAuthenticated: boolean; loading: boolean; login: (name: string, phone: string, email?: string, password?: string) => Promise<void>; signup: (name: string, phone: string, email: string, password: string) => Promise<void>; loginWithProvider: (provider: 'google'|'apple'|'azure') => void; resetPassword: (email: string) => Promise<void>; logout: () => void; updateProfile: (details: Partial<UserProfile>) => Promise<void>; refreshProfile: () => Promise<void>; }
@@ -46,6 +46,8 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({children}) 
     })();
     return () => { active = false; };
   }, []);
+
+  useEffect(() => onSessionChange((s) => { setSession(s); setAuthUser(s?.user || null); if (!s) setUser(null); }), []);
 
   useEffect(() => { if (session) refreshProfile(); else setUser(null); }, [session?.access_token]);
 

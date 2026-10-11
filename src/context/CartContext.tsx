@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { Product } from '../data/products';
-import { dbInsert, dbSelect, dbUpdate, rpc } from '../lib/supabase';
+import { dbSelect, dbSelectAll, rpc } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { useProducts } from './ProductsContext';
 import { useAdminAuthOptional } from './AdminAuthContext';
@@ -10,7 +10,7 @@ export interface CustomerDetails { name: string; phone: string; email: string; a
 export interface PlacedOrder { orderId: string; date: string; customer: CustomerDetails; items: CartItem[]; totalBoxes: number; subtotal: number; status: any; lorryTransport?: string; lrNumber?: string; dbId?: string; guestTrackingToken?: string; }
 
 interface CartContextType {
-  cart: CartItem[]; addToCart:(p:Product,q?:number)=>void; updateQuantity:(id:number,q:number)=>void; removeFromCart:(id:number)=>void; clearCart:()=>void; getItemQuantity:(id:number)=>number; totalItems:number; totalBoxes:number; subtotal:number; isCartOpen:boolean; setIsCartOpen:(v:boolean)=>void; customerDetails:CustomerDetails; updateCustomerDetails:(d:Partial<CustomerDetails>)=>void; ordersHistory:PlacedOrder[]; addPlacedOrder:(order:PlacedOrder)=>Promise<PlacedOrder>; placeOrder:()=>Promise<PlacedOrder>; updateOrderStatus:(orderId:string,status:any,lrNumber?:string,lorryTransport?:string)=>void; reorder:(items:CartItem[])=>void;
+  cart: CartItem[]; addToCart:(p:Product,q?:number)=>void; updateQuantity:(id:number,q:number)=>void; removeFromCart:(id:number)=>void; clearCart:()=>void; getItemQuantity:(id:number)=>number; totalItems:number; totalBoxes:number; subtotal:number; isCartOpen:boolean; setIsCartOpen:(v:boolean)=>void; customerDetails:CustomerDetails; updateCustomerDetails:(d:Partial<CustomerDetails>)=>void; ordersHistory:PlacedOrder[]; addPlacedOrder:(order?:PlacedOrder)=>Promise<PlacedOrder>; placeOrder:()=>Promise<PlacedOrder>; updateOrderStatus:(orderId:string,status:any,lrNumber?:string,lorryTransport?:string)=>void; reorder:(items:CartItem[])=>void;
 }
 const CartContext=createContext<CartContextType|undefined>(undefined);
 const CART_KEY='redthunder_cart_v4';
@@ -38,7 +38,7 @@ export const CartProvider:React.FC<{children:React.ReactNode}>=({children})=>{
     const token = adminAuth?.admin && adminToken ? adminToken : session?.access_token;
     if(!token || (!isAuthenticated && !adminAuth?.admin)) { setOrdersHistory([]); return; }
     try {
-      const rows:any[]=await dbSelect<any>('orders','select=*,order_items(*),order_tracking(*)&order=created_at.desc',token);
+      const rows:any[]=await dbSelectAll<any>('orders','select=*,order_items(*),order_tracking(*)&order=created_at.desc',token);
       setOrdersHistory(rows.map(mapDbOrder));
     } catch(e){ console.error('Order history load failed',e); }
   };
@@ -54,38 +54,55 @@ export const CartProvider:React.FC<{children:React.ReactNode}>=({children})=>{
   const totalItems=cart.length;
   const subtotal=useMemo(()=>cart.reduce((s,i)=>s+i.product.rate*i.quantity,0),[cart]);
 
-  const placeOrder=async():Promise<PlacedOrder>=>{
-    if(!cart.length) throw new Error('Your cart is empty.');
-    if(!customerDetails.name.trim() || !customerDetails.phone.trim() || !customerDetails.city.trim()) throw new Error('Please complete your name, phone and city.');
-    if(!customerDetails.email.trim() && !isAuthenticated) throw new Error('Guest checkout requires an email address.');
-    const items=cart.map(i=>({product_id:(i.product as any).dbId,quantity:i.quantity}));
+  const submitOrder=async(customer:CustomerDetails,lines:CartItem[],authToken?:string,asUserId?:string|null):Promise<PlacedOrder>=>{
+    if(!lines.length) throw new Error('Your cart is empty.');
+    if(!customer.name.trim() || !customer.phone.trim() || !customer.city.trim()) throw new Error('Please complete your name, phone and city.');
+    const items=lines.map(i=>({product_id:(i.product as any).dbId || products.find(p=>p.id===i.product.id)?.dbId,quantity:i.quantity}));
     if(items.some(i=>!i.product_id)) throw new Error('A product in the cart is no longer available. Please refresh the product list.');
-    const result:any=await rpc('create_order',{p_user_id:user?.id||null,p_customer_email:customerDetails.email||null,p_customer_phone:customerDetails.phone,p_shipping:{first_name:customerDetails.name.split(/\s+/)[0],last_name:customerDetails.name.split(/\s+/).slice(1).join(' '),phone:customerDetails.phone,address_line_1:customerDetails.address,city:customerDetails.city,district:customerDetails.district||'',state:customerDetails.state,postal_code:customerDetails.pincode,country:'India'},p_items:items,p_payment_method:'whatsapp_booking',p_customer_note:customerDetails.notes||null},session?.access_token);
-    const order:PlacedOrder={orderId:String(result.order_number),date:new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}),customer:customerDetails,items:[...cart],totalBoxes:Number(result.total_boxes_count),subtotal:Number(result.subtotal),status:'pending',guestTrackingToken:result.guest_tracking_token,dbId:result.id};
+    const result:any=await rpc('create_order',{p_user_id:asUserId??null,p_customer_email:customer.email||null,p_customer_phone:customer.phone,p_shipping:{first_name:customer.name.split(/\s+/)[0],last_name:customer.name.split(/\s+/).slice(1).join(' '),phone:customer.phone,address_line_1:customer.address,city:customer.city,district:customer.district||'',state:customer.state,postal_code:customer.pincode,country:'India'},p_items:items,p_payment_method:'whatsapp_booking',p_customer_note:customer.notes||null},authToken);
+    return {orderId:String(result.order_number),date:new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}),customer,items:[...lines],totalBoxes:Number(result.total_boxes_count),subtotal:Number(result.subtotal),status:'pending',guestTrackingToken:result.guest_tracking_token,dbId:result.id};
+  };
+
+  const placeOrder=async():Promise<PlacedOrder>=>{
+    if(!customerDetails.email.trim() && !isAuthenticated) throw new Error('Guest checkout requires an email address.');
+    const order=await submitOrder(customerDetails,cart,session?.access_token,user?.id||null);
     setOrdersHistory(prev=>[order,...prev]);
     clearCart();
     return order;
   };
-  const addPlacedOrder=async()=>placeOrder();
-  const updateOrderStatus=async(orderId:string,status:any,lrNumber?:string,lorryTransport?:string)=>{
-    if(!adminAuth?.admin || !adminToken) { await refreshOrders(); return; }
-    const row = await dbSelect<any>('orders', `select=id&order_number=eq.${encodeURIComponent(orderId)}&limit=1`, adminToken);
-    if(!row[0]) throw new Error('Order not found.');
-    const statusMap:any={'Payment Checked':'PAYMENT_VERIFIED','Packed in Sivakasi':'PACKED_AT_GODOWN','Sent via Lorry':'DISPATCHED_LORRY','Order Placed':'pending','WhatsApp Sent':'QUOTATION_SENT'};
-    const dbStatus=statusMap[status]||status;
-    const patch:any={status:dbStatus};
-    if(lrNumber !== undefined) patch.lr_number = lrNumber || null;
-    if(lorryTransport !== undefined) {
-      const t = await dbSelect<any>('transporters', `select=id&transporter_name=eq.${encodeURIComponent(lorryTransport)}&limit=1`, adminToken);
-      if(t[0]) patch.lorry_transporter_id=t[0].id;
+
+  // Admin / walk-in order: uses the order that was passed in (not the shopping cart) and saves it for real.
+  const addPlacedOrder=async(order?:PlacedOrder):Promise<PlacedOrder>=>{
+    if(!order) return placeOrder();
+    if(!adminAuth?.admin || !adminToken) throw new Error('Admin session required to record an order.');
+    const customer={...order.customer,email:order.customer.email||'walkin@redthunder.in'};
+    const created=await submitOrder(customer,order.items,adminToken,null);
+    if(order.status && order.status!=='pending'){
+      await setStatusRpc(created.orderId,order.status);
     }
-    const now=new Date().toISOString();
-    if(dbStatus==='confirmed' || dbStatus==='PAYMENT_VERIFIED') patch.confirmed_at=now;
-    if(dbStatus==='shipped' || dbStatus==='DISPATCHED_LORRY') patch.shipped_at=now;
-    if(dbStatus==='delivered') patch.delivered_at=now;
-    if(dbStatus==='cancelled') patch.cancelled_at=now;
-    await dbUpdate('orders', `id=eq.${row[0].id}`, patch, adminToken);
-    await dbInsert('order_tracking', {order_id:row[0].id,status:dbStatus,note:`Status updated by admin${lrNumber ? ` • LR ${lrNumber}` : ''}`}, adminToken);
+    const saved={...created,status:order.status||created.status};
+    await refreshOrders();
+    return saved;
+  };
+  const STATUS_MAP:any={'Payment Checked':'PAYMENT_VERIFIED','Packed in Sivakasi':'PACKED_AT_GODOWN','Sent via Lorry':'DISPATCHED_LORRY','Order Placed':'pending','WhatsApp Sent':'QUOTATION_SENT'};
+  // One atomic database call updates the order and writes its tracking entry together.
+  const setStatusRpc=async(orderId:string,status:any,lrNumber?:string,lorryTransport?:string)=>{
+    if(!adminAuth?.admin || !adminToken) throw new Error('Admin session required to update orders.');
+    const orderNumber=Number(orderId);
+    if(!Number.isFinite(orderNumber)) throw new Error('Invalid order number.');
+    const dbStatus=STATUS_MAP[status]||status;
+    let transporterName:string|null=null;
+    let note:string|null=null;
+    const typed=lorryTransport?.trim();
+    if(typed){
+      const t=await dbSelect<any>('transporters',`select=transporter_name&transporter_name=eq.${encodeURIComponent(typed)}&limit=1`,adminToken);
+      if(t[0]) transporterName=t[0].transporter_name;
+      else note=`Status updated by admin • Transporter: ${typed}${lrNumber?` • LR ${lrNumber}`:''}`;
+    }
+    await rpc('admin_set_order_status',{p_order_number:orderNumber,p_status:dbStatus,p_lr_number:lrNumber!==undefined?lrNumber:null,p_transporter_name:transporterName,p_note:note},adminToken);
+  };
+  const updateOrderStatus=async(orderId:string,status:any,lrNumber?:string,lorryTransport?:string)=>{
+    await setStatusRpc(orderId,status,lrNumber,lorryTransport);
     await refreshOrders();
   };
   const reorder=(items:CartItem[])=>setCart(items.map(i=>({...i}))); 
