@@ -109,7 +109,7 @@ html.dark textarea {
 
 
 /* Database theme bridge + portfolio palette with mild red page backgrounds. */
-:root { --rtc-background:#fff8f5; --rtc-surface:#fffaf7; --rtc-text:#241716; --rtc-primary:#d92d27; --rtc-accent:#e7ad21; }
+:root { --rtc-background:#f4f1ec; --rtc-surface:#ffffff; --rtc-surface-elevated:#ffffff; --rtc-section:#faf8f5; --rtc-text:#1f1a17; --rtc-muted:#756a67; --rtc-heading:#1f1a17; --rtc-primary:#c62828; --rtc-primary-dark:#9b1c1c; --rtc-link:#9b1c1c; --rtc-accent:#b45309; --rtc-border:#e5dfd7; --rtc-red-soft:#fff1f2; --rtc-red-mid:#ffe4e6; --rtc-red-strong:#fecdd3; }
 html.light body { background-color: var(--rtc-background) !important; color: var(--rtc-text) !important; }
 html.light [class*="bg-[#faf7f2]"] { background-color: var(--rtc-background) !important; }
 /* Palette bridge for existing utility-class components. */
@@ -118,3 +118,28 @@ html.light [class~="bg-amber-500"], html.light [class~="bg-amber-600"] { backgro
 html.light [class~="border-amber-600"], html.light [class~="border-red-600"] { border-color: var(--rtc-primary) !important; }
 html.light [class~="text-red-600"], html.light [class~="text-red-500"] { color: var(--rtc-primary) !important; }
 html.light [class~="text-amber-400"], html.light [class~="text-amber-500"] { color: var(--rtc-accent) !important; }
+
+
+/* Admin-only light palette: replace dark decorative hero gradients with soft company-red surfaces.
+   This is scoped to explicitly marked panels so action buttons, product imagery and dark mode stay unchanged. */
+html.light [data-rtc-admin-portal="true"] [data-rtc-light-red-panel="true"] {
+  background-color: #fff1f2 !important;
+  background-image: linear-gradient(112deg, #fff1f2 0%, #ffe4e6 54%, #fecdd3 100%) !important;
+  color: #7f1d1d !important;
+  border-color: #fecaca !important;
+  box-shadow: 0 14px 36px rgba(127, 29, 29, 0.08) !important;
+}
+html.light [data-rtc-admin-portal="true"] [data-rtc-light-red-panel="true"] :is(.text-white, .text-stone-100, .text-stone-200, .text-stone-300, .text-stone-400, .text-stone-500, .text-amber-300, .text-amber-400):not(button):not(a) {
+  color: #7f1d1d !important;
+}
+html.light [data-rtc-admin-portal="true"] [data-rtc-light-red-panel="true"] .text-amber-300,
+html.light [data-rtc-admin-portal="true"] [data-rtc-light-red-panel="true"] .text-amber-400 {
+  color: #9b1c1c !important;
+}
+html.light [data-rtc-admin-portal="true"] [data-rtc-light-red-panel="true"] button.text-white,
+html.light [data-rtc-admin-portal="true"] [data-rtc-light-red-panel="true"] a.text-white {
+  color: #ffffff !important;
+}
+html.light [data-rtc-admin-portal="true"] [data-rtc-light-red-panel="true"] button.text-stone-950 {
+  color: #1f1a17 !important;
+}

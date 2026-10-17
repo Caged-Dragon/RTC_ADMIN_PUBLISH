@@ -298,7 +298,10 @@ export const SellerPortalScreen: React.FC<SellerPortalScreenProps> = ({
         description: formData.description.trim() || editingProduct.description,
         popular: formData.popular,
         featured: formData.featured,
-        imageUrl: formData.imageUrl || undefined,
+        // Keep the DB image URL unchanged unless the user actually modified the image field.
+        imageUrl: formData.imageUrl === (editingProduct.imageUrl || getProductThumbnail(editingProduct))
+          ? undefined
+          : formData.imageUrl,
         stockStatus: formData.stockStatus,
       });
       showNotice(`Updated product #${formData.sNo} "${formData.name}".`);
@@ -479,7 +482,7 @@ export const SellerPortalScreen: React.FC<SellerPortalScreenProps> = ({
     <div className="py-6 sm:py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
       
       {/* SELLER PORTAL HERO HEADER */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-red-950 via-stone-900 to-amber-950 border border-amber-600/30 text-white shadow-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div data-rtc-light-red-panel="true" className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-red-950 via-stone-900 to-amber-950 border border-amber-600/30 text-white shadow-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <div className="flex flex-wrap items-center gap-2 mb-2">
             <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">

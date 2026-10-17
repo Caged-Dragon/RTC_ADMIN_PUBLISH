@@ -45,7 +45,7 @@ export const CategoryManagementScreen: React.FC = () => {
 
   return <div className="space-y-6" data-rtc-component="category_management">
     <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
-      <div><div className="text-xs uppercase tracking-[.2em] text-purple-600 font-black flex items-center gap-2"><Layers className="w-4 h-4"/> Catalogue structure</div><h1 className="text-3xl font-black mt-1">Category Manager</h1><p className="text-sm opacity-70 mt-2 max-w-3xl">Change the category name, description, detailed information, image, alt text and order. Renaming a category automatically updates the products linked to it.</p></div>
+      <div><div className="text-xs uppercase tracking-[.2em] text-red-700 dark:text-red-400 font-black flex items-center gap-2"><Layers className="w-4 h-4"/> Catalogue structure</div><h1 className="text-3xl font-black mt-1">Category Manager</h1><p className="text-sm opacity-70 mt-2 max-w-3xl">Change the category name, description, detailed information, image, alt text and order. Renaming a category automatically updates the products linked to it.</p></div>
       <button className="px-4 py-2.5 rounded-xl bg-red-600 text-white font-bold flex items-center gap-2" onClick={() => selectCategory('new')}><Plus className="w-4 h-4"/>New category</button>
     </div>
 
@@ -58,7 +58,7 @@ export const CategoryManagementScreen: React.FC = () => {
       </aside>
 
       <section className="rounded-2xl border p-5 bg-white/60 dark:bg-stone-900/60">
-        <div className="flex items-center justify-between gap-3"><div><div className="text-xs uppercase tracking-widest text-purple-600 font-black">{selected?'Edit category':'Create category'}</div><h2 className="text-2xl font-black mt-1">{selected?.category_name || 'New category'}</h2></div>{selected && <button onClick={deactivate} className="px-3 py-2 rounded-lg border border-red-300 text-red-600 font-bold flex items-center gap-2"><Trash2 className="w-4 h-4"/>Deactivate</button>}</div>
+        <div className="flex items-center justify-between gap-3"><div><div className="text-xs uppercase tracking-widest text-red-700 dark:text-red-400 font-black">{selected?'Edit category':'Create category'}</div><h2 className="text-2xl font-black mt-1">{selected?.category_name || 'New category'}</h2></div>{selected && <button onClick={deactivate} className="px-3 py-2 rounded-lg border border-red-300 text-red-600 font-bold flex items-center gap-2"><Trash2 className="w-4 h-4"/>Deactivate</button>}</div>
         <div className="grid md:grid-cols-2 gap-4 mt-5">
           <label><span className="block text-xs font-bold opacity-65 mb-1">Category name</span><input className="w-full border rounded-xl px-3 py-2.5 bg-transparent" value={form.category_name||''} onChange={e=>setForm({...form,category_name:e.target.value})}/></label>
           <label><span className="block text-xs font-bold opacity-65 mb-1">Slug</span><input className="w-full border rounded-xl px-3 py-2.5 bg-transparent" value={form.slug||''} onChange={e=>setForm({...form,slug:e.target.value})}/></label>

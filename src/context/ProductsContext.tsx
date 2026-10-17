@@ -81,9 +81,12 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       mrp_rate: Number(p.mrpRate ?? rate), description: p.description?.trim() || null,
       pieces_per_pack: p.pieces ? (parseInt(String(p.pieces), 10) || null) : null,
       stock_status: p.stockStatus || 'IN_STOCK', available_quantity: Number(p.availableQuantity ?? 0),
-      image_url: p.imageUrl || null, is_bestseller: !!(p.isBestseller ?? p.popular), is_featured: !!(p.isFeatured ?? p.featured),
+      is_bestseller: !!(p.isBestseller ?? p.popular), is_featured: !!(p.isFeatured ?? p.featured),
       is_green_cracker: !!p.isGreenCracker, updated_at: new Date().toISOString()
     };
+    // Do not rewrite an existing image reference when only editing other product details.
+    // An explicit imageUrl value means the user intentionally changed or cleared the image.
+    if (delta.imageUrl !== undefined) body.image_url = delta.imageUrl || null;
     if (!p.name?.trim()) throw new Error('Product name is required.');
     const updated = await dbUpdate<any>('products', `id=eq.${encodeURIComponent(existing.dbId)}`, body, adminToken);
     if (!updated?.length) throw new Error('Supabase matched no product rows. The product may have been deleted, or your admin role may lack SELECT/UPDATE permission.');

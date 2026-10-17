@@ -3,12 +3,12 @@ import { dbSelect } from './lib/supabase';
 export type ThemePage = Record<string, any>;
 
 const FALLBACK = {
-  background_color: '#fff8f5', surface_color: '#fffaf7', surface_elevated_color: '#ffffff', section_color: '#fff1ec',
-  header_color: '#ffffff', footer_color: '#3a0808', text_color: '#241716', muted_text_color: '#756a67', heading_color: '#c92b26',
-  primary_color: '#d92d27', primary_dark_color: '#a91f1b', secondary_color: '#7b4cc7', accent_color: '#e7ad21', link_color: '#b72b26',
-  button_background_color: '#d92d27', button_text_color: '#ffffff', border_color: '#ead8d1', border_strong_color: '#d9bcb3',
+  background_color: '#f4f1ec', surface_color: '#ffffff', surface_elevated_color: '#ffffff', section_color: '#faf8f5',
+  header_color: '#ffffff', footer_color: '#1f1a17', text_color: '#1f1a17', muted_text_color: '#756a67', heading_color: '#1f1a17',
+  primary_color: '#c62828', primary_dark_color: '#9b1c1c', secondary_color: '#be123c', accent_color: '#b45309', link_color: '#9b1c1c',
+  button_background_color: '#c62828', button_text_color: '#ffffff', border_color: '#e5dfd7', border_strong_color: '#d9bcb3',
   input_background_color: '#ffffff', input_border_color: '#decac3', card_shadow_color: 'rgba(80,20,15,.10)', hero_background_color: '#fff2dc',
-  banner_background_color: '#fff0e9', nav_background_color: '#ffffff', nav_text_color: '#241716', font_heading: 'system-ui', font_body: 'system-ui',
+  banner_background_color: '#fff0e9', nav_background_color: '#ffffff', nav_text_color: '#1f1a17', font_heading: 'system-ui', font_body: 'system-ui',
   radius_small: '10px', radius_medium: '16px', radius_large: '24px',
 };
 
@@ -33,6 +33,9 @@ export function applyThemeVars(theme: ThemePage) {
     '--rtc-radius-sm': theme.radius_small, '--rtc-radius-md': theme.radius_medium, '--rtc-radius-lg': theme.radius_large,
   };
   for (const [k,v] of Object.entries(map)) if (v) root.style.setProperty(k,v);
+  let themeColor = document.head.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
+  if (!themeColor) { themeColor = document.createElement('meta'); themeColor.name = 'theme-color'; document.head.appendChild(themeColor); }
+  themeColor.content = theme.primary_color || '#c62828';
   if (theme.font_heading) root.style.setProperty('--rtc-font-heading', theme.font_heading);
   if (theme.font_body) root.style.setProperty('--rtc-font-body', theme.font_body);
   root.dataset.rtcWebsite = 'admin'; root.dataset.rtcPage = theme.page_key || '';

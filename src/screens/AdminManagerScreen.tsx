@@ -212,7 +212,7 @@ export const AdminManagerScreen: React.FC<AdminManagerScreenProps> = ({
     <div className="py-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
       
       {/* Top Banner: Parallel Site Title & Mode Switcher */}
-      <div className="p-6 rounded-2xl bg-gradient-to-r from-red-950 via-stone-900 to-amber-950 border border-stone-800 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div data-rtc-light-red-panel="true" className="p-6 rounded-2xl bg-gradient-to-r from-red-950 via-stone-900 to-amber-950 border border-stone-800 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-600/30 text-amber-300 border border-red-500/30 text-xs font-bold uppercase tracking-wider mb-2">
             <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />

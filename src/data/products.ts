@@ -25,6 +25,9 @@ export interface StoreInfo {
   state: string;
   tagline: string;
   logoUrl?: string;
+  faviconUrl?: string;
+  legalName?: string;
+  websiteUrl?: string;
 }
 
 export const STORE_INFO: StoreInfo = {

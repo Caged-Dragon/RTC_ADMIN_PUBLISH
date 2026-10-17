@@ -72,7 +72,7 @@ export const BannerManagementScreen: React.FC = () => {
   const remove=async(b:Banner)=>{if(!token||!confirm('Delete this banner? The linked offer will be kept.'))return;try{await dbDelete('offer_banners',`id=eq.${b.id}`,token);if(editingId===b.id)reset();await load();}catch(e:any){setError(e.message||'Could not delete banner.');}};
 
   return <div className="space-y-6">
-    <div className="rounded-3xl border border-amber-600/30 bg-gradient-to-r from-red-950 via-stone-900 to-amber-950 p-6 sm:p-8 text-white shadow-xl">
+    <div data-rtc-light-red-panel="true" className="rounded-3xl border border-amber-600/30 bg-gradient-to-r from-red-950 via-stone-900 to-amber-950 p-6 sm:p-8 text-white shadow-xl">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
         <div><div className="text-[11px] uppercase tracking-widest font-bold text-amber-400 mb-2">Home Screen Control</div><h1 className="font-display text-2xl sm:text-3xl font-black">Top Banner Management</h1><p className="text-sm text-stone-300 mt-2 max-w-2xl">The first component on the customer home screen comes from this banner section. Create, edit, reorder, activate or deactivate banners here.</p></div>
         <button onClick={()=>{reset();window.scrollTo({top:0,behavior:'smooth'});}} className="px-4 py-3 rounded-xl bg-amber-500 text-stone-950 font-black text-sm flex items-center justify-center gap-2"><Plus className="w-4 h-4"/> New Banner</button>
