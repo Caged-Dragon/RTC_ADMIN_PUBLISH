@@ -3,12 +3,12 @@ import { dbSelect } from './lib/supabase';
 export type ThemePage = Record<string, any>;
 
 const FALLBACK = {
-  background_color: '#f4f1ec', surface_color: '#ffffff', surface_elevated_color: '#ffffff', section_color: '#faf8f5',
-  header_color: '#ffffff', footer_color: '#1f1a17', text_color: '#1f1a17', muted_text_color: '#756a67', heading_color: '#1f1a17',
-  primary_color: '#c62828', primary_dark_color: '#9b1c1c', secondary_color: '#be123c', accent_color: '#b45309', link_color: '#9b1c1c',
-  button_background_color: '#c62828', button_text_color: '#ffffff', border_color: '#e5dfd7', border_strong_color: '#d9bcb3',
-  input_background_color: '#ffffff', input_border_color: '#decac3', card_shadow_color: 'rgba(80,20,15,.10)', hero_background_color: '#fff2dc',
-  banner_background_color: '#fff0e9', nav_background_color: '#ffffff', nav_text_color: '#1f1a17', font_heading: 'system-ui', font_body: 'system-ui',
+  background_color: '#fff7ed', surface_color: '#ffffff', surface_elevated_color: '#fffdf8', section_color: '#ffedd5',
+  header_color: '#ffffff', footer_color: '#171717', text_color: '#171717', muted_text_color: '#171717', heading_color: '#c62828',
+  primary_color: '#c62828', primary_dark_color: '#9b1c1c', secondary_color: '#f97316', accent_color: '#ea580c', link_color: '#b91c1c',
+  button_background_color: '#fb923c', button_text_color: '#171717', border_color: '#fecaca', border_strong_color: '#ea580c',
+  input_background_color: '#fffdf8', input_border_color: '#fb923c', card_shadow_color: 'rgba(110,30,20,.12)', hero_background_color: '#ffedd5',
+  banner_background_color: '#ffe4e6', nav_background_color: '#fff7ed', nav_text_color: '#171717', font_heading: 'system-ui', font_body: 'system-ui',
   radius_small: '10px', radius_medium: '16px', radius_large: '24px',
 };
 
@@ -30,6 +30,7 @@ export function applyThemeVars(theme: ThemePage) {
     '--rtc-button-text': theme.button_text_color, '--rtc-border': theme.border_color, '--rtc-border-strong': theme.border_strong_color,
     '--rtc-input': theme.input_background_color, '--rtc-input-border': theme.input_border_color, '--rtc-hero': theme.hero_background_color,
     '--rtc-banner': theme.banner_background_color, '--rtc-nav': theme.nav_background_color, '--rtc-nav-text': theme.nav_text_color,
+    '--rtc-card-shadow': theme.card_shadow_color || 'rgba(110,30,20,.12)',
     '--rtc-radius-sm': theme.radius_small, '--rtc-radius-md': theme.radius_medium, '--rtc-radius-lg': theme.radius_large,
   };
   for (const [k,v] of Object.entries(map)) if (v) root.style.setProperty(k,v);
@@ -38,7 +39,7 @@ export function applyThemeVars(theme: ThemePage) {
   themeColor.content = theme.primary_color || '#c62828';
   if (theme.font_heading) root.style.setProperty('--rtc-font-heading', theme.font_heading);
   if (theme.font_body) root.style.setProperty('--rtc-font-body', theme.font_body);
-  root.dataset.rtcWebsite = 'admin'; root.dataset.rtcPage = theme.page_key || '';
+  root.dataset.rtcWebsite = theme.website_key || 'admin'; root.dataset.rtcPage = theme.page_key || '';
 }
 
 

@@ -54,9 +54,13 @@ import { OrderDetailsModal } from '../components/OrderDetailsModal';
 import { CustomerAnalysisDashboard } from '../components/CustomerAnalysisDashboard';
 import { SellerAnalyticsDashboard } from '../components/SellerAnalyticsDashboard';
 
+export type SellerTab = 'inventory' | 'orders' | 'customers' | 'dispatch' | 'walkin' | 'analytics' | 'settings';
+
 interface SellerPortalScreenProps {
   onSwitchToCustomer: () => void;
   onOpenInvoice: () => void;
+  activeTab?: SellerTab;
+  onActiveTabChange?: (tab: SellerTab) => void;
 }
 
 // Sivakasi Festive Image Presets for Seller
@@ -94,6 +98,8 @@ const DESTINATION_RATES = [
 
 export const SellerPortalScreen: React.FC<SellerPortalScreenProps> = ({
   onSwitchToCustomer,
+  activeTab,
+  onActiveTabChange,
 }) => {
   const { products, insertProduct, updateProduct, deleteProduct, uploadProductImage, refreshProducts } = useProducts();
   const { ordersHistory, updateOrderStatus, addPlacedOrder } = useCart();
@@ -107,7 +113,9 @@ export const SellerPortalScreen: React.FC<SellerPortalScreenProps> = ({
   }, []);
 
   // Active Seller Portal Tab
-  const [sellerTab, setSellerTab] = useState<'inventory' | 'orders' | 'customers' | 'dispatch' | 'walkin' | 'analytics' | 'settings'>('inventory');
+  const [sellerTab, setSellerTab] = useState<SellerTab>(activeTab ?? 'inventory');
+  useEffect(() => { if (activeTab && activeTab !== sellerTab) setSellerTab(activeTab); }, [activeTab]);
+  const changeSellerTab = (tab: SellerTab) => { setSellerTab(tab); onActiveTabChange?.(tab); };
 
   // Search & Filters in Inventory
   const [productSearch, setProductSearch] = useState('');
@@ -479,7 +487,7 @@ export const SellerPortalScreen: React.FC<SellerPortalScreenProps> = ({
   };
 
   return (
-    <div className="py-6 sm:py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+    <div className="w-full min-w-0 space-y-5 py-2 sm:space-y-6 sm:py-3">
       
       {/* SELLER PORTAL HERO HEADER */}
       <div data-rtc-light-red-panel="true" className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-red-950 via-stone-900 to-amber-950 border border-amber-600/30 text-white shadow-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -554,94 +562,47 @@ export const SellerPortalScreen: React.FC<SellerPortalScreenProps> = ({
         </div>
       </div>
 
-      {/* SELLER NAVIGATION TABS */}
-      <div className="flex border-b border-stone-800 dark:border-stone-800 light:border-stone-200 space-x-1 sm:space-x-2 overflow-x-auto text-xs font-bold scrollbar-none pb-1">
-        
-        <button
-          onClick={() => setSellerTab('inventory')}
-          className={`py-3 px-3.5 sm:px-4 border-b-2 flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
-            sellerTab === 'inventory'
-              ? 'border-amber-500 text-amber-400 dark:text-amber-400 light:text-amber-800'
-              : 'border-transparent text-stone-400 hover:text-white dark:hover:text-white light:hover:text-stone-900'
-          }`}
-        >
-          <Package className="w-4 h-4" />
-          <span>Product Inventory & Images ({products.length})</span>
-        </button>
-
-        <button
-          onClick={() => setSellerTab('orders')}
-          className={`py-3 px-3.5 sm:px-4 border-b-2 flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
-            sellerTab === 'orders'
-              ? 'border-amber-500 text-amber-400 dark:text-amber-400 light:text-amber-800'
-              : 'border-transparent text-stone-400 hover:text-white dark:hover:text-white light:hover:text-stone-900'
-          }`}
-        >
-          <Clock className="w-4 h-4" />
-          <span>Customer Orders Queue ({ordersHistory.length})</span>
-        </button>
-
-        <button
-          onClick={() => setSellerTab('customers')}
-          className={`py-3 px-3.5 sm:px-4 border-b-2 flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
-            sellerTab === 'customers'
-              ? 'border-amber-500 text-amber-400 dark:text-amber-400 light:text-amber-800'
-              : 'border-transparent text-stone-400 hover:text-white dark:hover:text-white light:hover:text-stone-900'
-          }`}
-        >
-          <Users className="w-4 h-4" />
-          <span>Customer Analysis & LTV</span>
-        </button>
-
-        <button
-          onClick={() => setSellerTab('dispatch')}
-          className={`py-3 px-3.5 sm:px-4 border-b-2 flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
-            sellerTab === 'dispatch'
-              ? 'border-amber-500 text-amber-400 dark:text-amber-400 light:text-amber-800'
-              : 'border-transparent text-stone-400 hover:text-white dark:hover:text-white light:hover:text-stone-900'
-          }`}
-        >
-          <Truck className="w-4 h-4" />
-          <span>Lorry Transport & LR Desk</span>
-        </button>
-
-        <button
-          onClick={() => setSellerTab('walkin')}
-          className={`py-3 px-3.5 sm:px-4 border-b-2 flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
-            sellerTab === 'walkin'
-              ? 'border-amber-500 text-amber-400 dark:text-amber-400 light:text-amber-800'
-              : 'border-transparent text-stone-400 hover:text-white dark:hover:text-white light:hover:text-stone-900'
-          }`}
-        >
-          <Receipt className="w-4 h-4" />
-          <span>Quick Bill / Walk-in Maker</span>
-        </button>
-
-        <button
-          onClick={() => setSellerTab('analytics')}
-          className={`py-3 px-3.5 sm:px-4 border-b-2 flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
-            sellerTab === 'analytics'
-              ? 'border-amber-500 text-amber-400 dark:text-amber-400 light:text-amber-800'
-              : 'border-transparent text-stone-400 hover:text-white dark:hover:text-white light:hover:text-stone-900'
-          }`}
-        >
-          <TrendingUp className="w-4 h-4" />
-          <span>Sales & Analytics</span>
-        </button>
-
-        <button
-          onClick={() => setSellerTab('settings')}
-          className={`py-3 px-3.5 sm:px-4 border-b-2 flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
-            sellerTab === 'settings'
-              ? 'border-amber-500 text-amber-400 dark:text-amber-400 light:text-amber-800'
-              : 'border-transparent text-stone-400 hover:text-white dark:hover:text-white light:hover:text-stone-900'
-          }`}
-        >
-          <QrCode className="w-4 h-4" />
-          <span>Factory Profile & QR</span>
-        </button>
-
-      </div>
+      {/* SELLER NAVIGATION: all operation sections visible without horizontal scrolling */}
+      <section aria-label="Business operation sections" className="rounded-2xl border border-stone-200 bg-white p-2 shadow-sm dark:border-stone-800 dark:bg-stone-900/70 sm:p-3">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2 px-2 pt-1">
+          <h2 className="text-xs font-extrabold uppercase tracking-[0.13em] text-stone-500 dark:text-stone-400">Business sections</h2>
+          <span className="text-[10px] text-stone-500 dark:text-stone-400">Choose a section to manage it</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
+          {([
+            { id: 'inventory', title: 'Products', subtitle: 'Items, pricing & stock', icon: Package, count: products.length },
+            { id: 'orders', title: 'Orders', subtitle: 'Order queue & payments', icon: Clock, count: ordersHistory.length },
+            { id: 'customers', title: 'Customers', subtitle: 'Customer insights', icon: Users },
+            { id: 'dispatch', title: 'Dispatch', subtitle: 'Transport & LR desk', icon: Truck },
+            { id: 'walkin', title: 'Walk-in billing', subtitle: 'Quick bills & quotes', icon: Receipt },
+            { id: 'analytics', title: 'Analytics', subtitle: 'Sales performance', icon: TrendingUp },
+            { id: 'settings', title: 'Factory profile', subtitle: 'Profile & QR settings', icon: QrCode },
+          ] as const).map((item) => {
+            const Icon = item.icon;
+            const active = sellerTab === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => changeSellerTab(item.id)}
+                aria-current={active ? 'page' : undefined}
+                className={`flex min-h-[76px] min-w-0 items-start gap-2 rounded-xl border px-2.5 py-3 text-left transition-colors cursor-pointer sm:gap-2.5 sm:px-3 ${active
+                  ? 'border-red-200 bg-red-50 text-red-900 shadow-sm dark:border-red-900 dark:bg-red-950/40 dark:text-red-100'
+                  : 'border-stone-200 bg-stone-50 text-stone-700 hover:border-red-200 hover:bg-red-50/70 dark:border-stone-800 dark:bg-stone-950/60 dark:text-stone-300 dark:hover:border-red-900 dark:hover:bg-red-950/20'}`}
+              >
+                <span className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${active ? 'bg-red-600 text-white' : 'bg-white text-stone-600 dark:bg-stone-900 dark:text-stone-300'}`}><Icon className="h-4 w-4" /></span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex flex-wrap items-center gap-1 text-[11px] font-extrabold leading-4 sm:text-xs">
+                    <span>{item.title}</span>
+                    {'count' in item && <span className={`rounded-full px-1.5 py-0.5 text-[9px] leading-none ${active ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100' : 'bg-stone-200 text-stone-700 dark:bg-stone-800 dark:text-stone-300'}`}>{item.count}</span>}
+                  </span>
+                  <span className="mt-1 block text-[10px] leading-4 text-stone-500 dark:text-stone-400">{item.subtitle}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
       {/* TAB 1: PRODUCT & INVENTORY MANAGEMENT (INSERT, UPDATE, DELETE, PHOTO UPLOAD, STOCK TOGGLE) */}
       {sellerTab === 'inventory' && (
