@@ -19,8 +19,7 @@ import {
   Sparkles,
   ShieldCheck
 } from 'lucide-react';
-import type { Product } from '../data/products';
-import { useProducts } from '../context/ProductsContext';
+import { useProducts, type DbProduct } from '../context/ProductsContext';
 import { useCategories } from '../context/CategoriesContext';
 import { ScreenId } from '../components/Navbar';
 
@@ -40,7 +39,7 @@ export const AdminManagerScreen: React.FC<AdminManagerScreenProps> = ({
 
   // Insert/Edit Modal states
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingProduct, setEditingProduct] = useState<DbProduct | null>(null);
 
   // Form Fields
   const [formData, setFormData] = useState({
@@ -49,6 +48,11 @@ export const AdminManagerScreen: React.FC<AdminManagerScreenProps> = ({
     category: 'Colourful Sparklers',
     unit: 'Box' as 'Box' | 'Pkt' | 'Tube',
     rate: '',
+    mrpRate: '',
+    skuCode: '',
+    availableQuantity: '0',
+    stockStatus: 'IN_STOCK',
+    isGreenCracker: false,
     pieces: '',
     description: '',
     popular: false,
@@ -56,7 +60,7 @@ export const AdminManagerScreen: React.FC<AdminManagerScreenProps> = ({
   });
 
   // Delete confirmation
-  const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
+  const [deletingProduct, setDeletingProduct] = useState<DbProduct | null>(null);
 
   // Bulk Price Adjuster
   const [bulkPercent, setBulkPercent] = useState<string>('');
@@ -91,6 +95,11 @@ export const AdminManagerScreen: React.FC<AdminManagerScreenProps> = ({
       category: 'Colourful Sparklers',
       unit: 'Box',
       rate: '',
+        mrpRate: '',
+      skuCode: '',
+      availableQuantity: '0',
+      stockStatus: 'IN_STOCK',
+      isGreenCracker: false,
       pieces: '',
       description: '',
       popular: false,
@@ -99,7 +108,7 @@ export const AdminManagerScreen: React.FC<AdminManagerScreenProps> = ({
     setIsFormOpen(true);
   };
 
-  const handleOpenEdit = (p: Product) => {
+  const handleOpenEdit = (p: DbProduct) => {
     setEditingProduct(p);
     setFormData({
       sNo: p.sNo.toString(),
@@ -107,6 +116,11 @@ export const AdminManagerScreen: React.FC<AdminManagerScreenProps> = ({
       category: p.category,
       unit: p.unit,
       rate: p.rate.toString(),
+      mrpRate: String(p.mrpRate ?? p.rate),
+      skuCode: p.skuCode || '',
+      availableQuantity: String(p.availableQuantity ?? 0),
+      stockStatus: p.stockStatus || 'IN_STOCK',
+      isGreenCracker: !!p.isGreenCracker,
       pieces: p.pieces || '',
       description: p.description,
       popular: !!p.popular,
@@ -117,44 +131,51 @@ export const AdminManagerScreen: React.FC<AdminManagerScreenProps> = ({
 
   const handleSaveForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    const rateNum = parseFloat(formData.rate);
-    if (!formData.name.trim() || isNaN(rateNum) || rateNum <= 0) {
-      alert('Please provide a valid name and price rate greater than 0.');
+    const rateNum = Number(formData.rate);
+    const factoryRateNum = rateNum;
+    const mrpRateNum = formData.mrpRate.trim() ? Number(formData.mrpRate) : rateNum;
+    const quantityNum = formData.availableQuantity.trim() ? Number(formData.availableQuantity) : 0;
+    const sNoNum = Number(formData.sNo);
+    if (!formData.name.trim() || !Number.isInteger(sNoNum) || sNoNum <= 0 || !Number.isFinite(rateNum) || rateNum <= 0) {
+      alert('Enter a product name, a positive whole-number S.No, and a rate greater than 0.');
+      return;
+    }
+    if (![factoryRateNum, mrpRateNum, quantityNum].every(Number.isFinite) || factoryRateNum < 0 || mrpRateNum < 0 || quantityNum < 0) {
+      alert('Factory rate, MRP, and available quantity must be valid non-negative numbers.');
       return;
     }
 
-    if (editingProduct) {
-      // Update
-      await updateProduct(editingProduct.id, {
-        sNo: parseInt(formData.sNo, 10) || editingProduct.sNo,
+    try {
+      const values = {
+        sNo: sNoNum,
         name: formData.name.trim(),
         category: formData.category,
+        categoryId: categories.find((c) => c.category_name === formData.category)?.category_id,
         unit: formData.unit,
-        rate: Math.round(rateNum),
+        rate: rateNum,
+        factoryRate: factoryRateNum,
+        mrpRate: mrpRateNum,
+        skuCode: formData.skuCode.trim() || `RT-${String(sNoNum).padStart(3, '0')}`,
+        availableQuantity: quantityNum,
+        stockStatus: formData.stockStatus,
+        isGreenCracker: formData.isGreenCracker,
         pieces: formData.pieces.trim() || undefined,
-        description: formData.description.trim() || editingProduct.description,
+        description: formData.description.trim(),
         popular: formData.popular,
         featured: formData.featured,
-      });
-      showNotice(`Updated details for "${formData.name}" (S.No #${formData.sNo})`);
-    } else {
-      // Insert
-      const newSNo = parseInt(formData.sNo, 10) || (products.length + 1);
-      await insertProduct({
-        sNo: newSNo,
-        name: formData.name.trim(),
-        category: formData.category,
-        unit: formData.unit,
-        rate: Math.round(rateNum),
-        pieces: formData.pieces.trim() || undefined,
-        description: formData.description.trim() || 'Sivakasi festive firework item',
-        popular: formData.popular,
-        featured: formData.featured,
-      });
-      showNotice(`Successfully added "${formData.name}" to catalog!`);
+      };
+      if (editingProduct) {
+        await updateProduct(editingProduct, values);
+        showNotice(`Updated details for "${values.name}" (S.No #${values.sNo})`);
+      } else {
+        await insertProduct(values);
+        showNotice(`Successfully added "${values.name}" to catalog!`);
+      }
+      setIsFormOpen(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error while saving the product.';
+      alert(`Product was not saved. ${message}`);
     }
-
-    setIsFormOpen(false);
   };
 
   const handleConfirmDelete = async () => {
@@ -468,7 +489,7 @@ export const AdminManagerScreen: React.FC<AdminManagerScreenProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-stone-300 dark:text-stone-300 light:text-stone-700 font-bold mb-1">
-                    Rate (₹) <span className="text-red-400">*</span>
+                    Factory / Store Rate (₹) <span className="text-red-400">*</span>
                   </label>
                   <input
                     type="number"
@@ -492,6 +513,27 @@ export const AdminManagerScreen: React.FC<AdminManagerScreenProps> = ({
                     onChange={(e) => setFormData({ ...formData, pieces: e.target.value })}
                     className="w-full px-3 py-2 rounded-lg bg-stone-950 dark:bg-stone-950 light:bg-stone-50 border border-stone-700 text-white dark:text-white light:text-stone-900"
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-stone-300 dark:text-stone-300 light:text-stone-700 font-bold mb-1">MRP (₹)</label>
+                  <input type="number" min="0" step="0.01" value={formData.mrpRate} onChange={(e) => setFormData({ ...formData, mrpRate: e.target.value })} className="w-full px-3 py-2 rounded-lg bg-stone-950 dark:bg-stone-950 light:bg-stone-50 border border-stone-700 text-white dark:text-white light:text-stone-900" />
+                </div>
+                <div>
+                  <label className="block text-stone-300 dark:text-stone-300 light:text-stone-700 font-bold mb-1">Available Quantity</label>
+                  <input type="number" min="0" step="1" value={formData.availableQuantity} onChange={(e) => setFormData({ ...formData, availableQuantity: e.target.value })} className="w-full px-3 py-2 rounded-lg bg-stone-950 dark:bg-stone-950 light:bg-stone-50 border border-stone-700 text-white dark:text-white light:text-stone-900" />
+                </div>
+                <div>
+                  <label className="block text-stone-300 dark:text-stone-300 light:text-stone-700 font-bold mb-1">SKU Code</label>
+                  <input type="text" value={formData.skuCode} onChange={(e) => setFormData({ ...formData, skuCode: e.target.value })} placeholder="Auto-generated if blank" className="w-full px-3 py-2 rounded-lg bg-stone-950 dark:bg-stone-950 light:bg-stone-50 border border-stone-700 text-white dark:text-white light:text-stone-900" />
+                </div>
+                <div>
+                  <label className="block text-stone-300 dark:text-stone-300 light:text-stone-700 font-bold mb-1">Stock Status</label>
+                  <select value={formData.stockStatus} onChange={(e) => setFormData({ ...formData, stockStatus: e.target.value })} className="w-full px-3 py-2 rounded-lg bg-stone-950 dark:bg-stone-950 light:bg-stone-50 border border-stone-700 text-white dark:text-white light:text-stone-900">
+                    <option value="IN_STOCK">In Stock</option><option value="LOW_STOCK">Low Stock</option><option value="OUT_OF_STOCK">Out of Stock</option>
+                  </select>
                 </div>
               </div>
 
@@ -527,6 +569,10 @@ export const AdminManagerScreen: React.FC<AdminManagerScreenProps> = ({
                     className="rounded border-stone-700 text-amber-500 focus:ring-0"
                   />
                   <span>Mark as Featured Sky Wonder</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer text-stone-300 dark:text-stone-300 light:text-stone-700">
+                  <input type="checkbox" checked={formData.isGreenCracker} onChange={(e) => setFormData({ ...formData, isGreenCracker: e.target.checked })} className="rounded border-stone-700 text-amber-500 focus:ring-0" />
+                  <span>Green Cracker</span>
                 </label>
               </div>
 
